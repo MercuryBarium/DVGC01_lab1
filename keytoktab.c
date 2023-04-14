@@ -20,52 +20,51 @@
 /**********************************************************************/
 /* type definitions                                                   */
 /**********************************************************************/
-typedef struct tab {
-	char 	* text;
-	int 	token;
-	} tab;
-	
+typedef struct tab
+{
+	char *text;
+	int token;
+} tab;
+
 /**********************************************************************/
 /* data objects (tables)                                              */
 /**********************************************************************/
-static tab tokentab[ ] = {
-    {"id", 	        id},
-	{"number", 		number},
-	{":=",			assign},
-	{"undef", 		undef},
-	{"predef", 		predef},
-	{"tempty", 		tempty},
-	{"error",       error},
-	{"type",        typ},
-	{"$",           '$'},
-	{"(",           '('},
-	{")",           ')'},
-	{"*",           '*'},
-	{"+",           '+'},
-	{",",           ','},
-	{"-",           '-'},
-	{".",           '.'},
-	{"/",           '/'},
-	{":",           ':'},
-	{";",           ';'},
-	{"=",           '='},
-	{"TERROR", 	nfound}		// Oh no!
+static tab tokentab[] = {
+	{"id", id},
+	{"number", number},
+	{":=", assign},
+	{"undef", undef},
+	{"predef", predef},
+	{"tempty", tempty},
+	{"error", error},
+	{"type", typ},
+	{"$", '$'},
+	{"(", '('},
+	{")", ')'},
+	{"*", '*'},
+	{"+", '+'},
+	{",", ','},
+	{"-", '-'},
+	{".", '.'},
+	{"/", '/'},
+	{":", ':'},
+	{";", ';'},
+	{"=", '='},
+	{"TERROR", nfound} // Oh no! Terror
 };
 
+static tab keywordtab[] = {
+	{"program", program},
+	{"input", input},
+	{"output", output},
+	{"var", var},
+	{"begin", begin},
+	{"end", end},
+	{"boolean", boolean},
+	{"integer", integer},
+	{"real", real},
+	{"KERROR", nfound}};
 
-static tab keywordtab[ ] = {
-	{"program", 	program},
-	{"input", 		input},
-	{"output", 		output},
-	{"var", 		var},
-	{"begin", 		begin},
-	{"end", 		end},
-	{"boolean", 	boolean},
-	{"integer", 	integer},
-	{"real", 		real},
-	{"KERROR", 		nfound}
-};
-   
 /**********************************************************************/
 /*  PUBLIC METHODS for this OBJECT  (EXPORTED)                        */
 /**********************************************************************/
@@ -73,35 +72,48 @@ static tab keywordtab[ ] = {
 /* Display the tables                                                 */
 /**********************************************************************/
 void p_toktab()
-{  
-	
+{
 }
 
 /**********************************************************************/
 /* lex2tok - convert a lexeme to a token                              */
 /**********************************************************************/
-toktyp lex2tok(char * fplex)
+toktyp lex2tok(char *fplex)
 {
-   printf("\n *** TO BE DONE");  return 0;
+	int tokentab_size = 21;
+	int i;
+	for (i = 0; i < tokentab_size; i++)
+	{
+		if (!strcmp(fplex, tokentab[i].text))
+			return tokentab[i].token;
+	}
+	return tokentab[i-1].token;
 }
 
 /**********************************************************************/
 /* key2tok - convert a keyword to a token                             */
 /**********************************************************************/
-toktyp key2tok(char * fplex)
+toktyp key2tok(char *fplex)
 {
-   printf("\n *** TO BE DONE");  return 0;
-   }
+	int keywordtab_size = 10;
+	int i;
+	for (i = 0; i < keywordtab_size; i++)
+	{
+		if (!strcmp(fplex, keywordtab[i].text))
+			return keywordtab[i].token;
+	}
+	return keywordtab[i-1].token;
+}
 
 /**********************************************************************/
 /* tok2lex - convert a token to a lexeme                              */
 /**********************************************************************/
-char * tok2lex(toktyp ftok)
+char *tok2lex(toktyp ftok)
 {
-   printf("\n *** TO BE DONE");  return 0;
+	printf("\n *** TO BE DONE");
+	return 0;
 }
 
 /**********************************************************************/
 /* End of code                                                        */
 /**********************************************************************/
-
