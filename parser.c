@@ -12,7 +12,7 @@
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
 /**********************************************************************/
-/* #include "keytoktab.h"   */ /* when the keytoktab is added   */
+#include "keytoktab.h"
 /* #include "lexer.h"       */ /* when the lexer     is added   */
 /* #include "symtab.h"      */ /* when the symtab    is added   */
 /* #include "optab.h"       */ /* when the optab     is added   */
@@ -27,24 +27,12 @@ static int is_parse_ok = 1;
 /**********************************************************************/
 /* RAPID PROTOTYPING - simulate the token stream & lexer (get_token)  */
 /**********************************************************************/
-/* define tokens + keywords NB: remove this when keytoktab.h is added */
-/**********************************************************************/
-enum tvalues
-{
-    program = 257,
-    id,
-    input,
-    output,
-    var,
-    integer,
-    real,
-    boolean
-};
+
 /**********************************************************************/
 /* Simulate the token stream for a given program                      */
 /**********************************************************************/
 static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
-                       var, id, ':', integer, ';', '$'};
+                       var, id, ':', integer, ';', begin, id, assign, id, '+', number, '*', number, '*', '(', number, '+', number, ')', ';', end, '$'};
 
 /**********************************************************************/
 /*  Simulate the lexer -- get the next token from the buffer          */
@@ -68,21 +56,22 @@ static int pget_token()
 static void match(int t)
 {
     if (DEBUG)
-        printf("\n --------In match expected: %4d, found: %4d",
-               t, lookahead);
+        printf("\n --------In match expected: %s, found: %s",
+               tok2lex(t), tok2lex(lookahead));
     if (lookahead == t)
         lookahead = pget_token();
     else
     {
         is_parse_ok = 0;
-        printf("\n *** Unexpected Token: expected: %4d found: %4d (in match)",
-               t, lookahead);
+        printf("\n \e[1;31m*** Unexpected Token: expected: %s found: %s (in match)\e[0m",
+               tok2lex(t), tok2lex(lookahead));
     }
 }
 
 /**********************************************************************/
 /* The grammar functions                                              */
 /**********************************************************************/
+//___Program___Header___
 static void program_header()
 {
     if (DEBUG)
@@ -96,7 +85,9 @@ static void program_header()
     match(')');
     match(';');
 }
+//______________________
 
+//___var___part_________
 void type()
 {
     if (lookahead == integer)
@@ -134,8 +125,94 @@ void var_dec_list()
 
 void var_part()
 {
+
     match(var);
     var_dec_list();
+}
+//______________________
+
+//___STAT_PART___
+
+void operand()
+{
+    if (lookahead == number)
+        match(number);
+    else
+        match(id);
+}
+
+void expr(); // Magic :>
+void factor()
+{
+    if (lookahead == '(')
+    {
+        match('(');
+        expr();
+        match(')');
+    }
+    else
+        operand();
+}
+
+void term()
+{
+    factor();
+    if (lookahead == '*')
+    {
+        match('*');
+        term(); //  -> factor();
+    }
+}
+
+void expr()
+{
+    term();
+    if (lookahead == '+')
+    {
+        match('+');
+        expr();
+    }
+}
+
+void assign_stat()
+{
+    match(id);
+    match(assign);
+    expr();
+}
+
+void stat()
+{
+    assign_stat();
+}
+
+void stat_list()
+{
+    stat();
+    if (lookahead = ';')
+    {
+        match(';');
+        if (lookahead != end)
+            stat_list(); // -> another statement.
+    }
+}
+
+void stat_part()
+{
+    match(begin);
+    stat_list();
+    match(end);
+}
+
+//______________________
+
+//___PROG___
+void prog()
+{
+    program_header();
+    var_part();
+    stat_part();
+    match('$');
 }
 
 /**********************************************************************/
@@ -147,9 +224,8 @@ int parser()
     if (DEBUG)
         printf("\n *** In  parser");
     lookahead = pget_token(); // get the first token
-    program_header();         // call the first grammar rule
-    var_part();
-    return is_parse_ok; // status indicator
+    prog();                   // call the first grammar rule
+    return is_parse_ok;       // status indicator
 }
 
 /**********************************************************************/

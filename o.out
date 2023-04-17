@@ -1,0 +1,17 @@
+
+ *** In  parser
+ *** In  program_header
+ [1;31m--------In match expected: program, found: program[0m
+ [1;31m--------In match expected: id, found: id[0m
+ [1;31m--------In match expected: (, found: ([0m
+ [1;31m--------In match expected: input, found: input[0m
+ [1;31m--------In match expected: ,, found: ,[0m
+ [1;31m--------In match expected: output, found: output[0m
+ [1;31m--------In match expected: ), found: )[0m
+ [1;31m--------In match expected: ;, found: ;[0m
+ [1;31m--------In match expected: var, found: var[0m
+ [1;31m--------In match expected: id, found: id[0m
+ [1;31m--------In match expected: :, found: :[0m
+ [1;31m--------In match expected: integer, found: integer[0m
+ [1;31m--------In match expected: ;, found: ;[0m 
+ [0;32mParse Successful! 

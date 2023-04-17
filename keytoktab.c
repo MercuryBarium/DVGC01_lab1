@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
@@ -110,8 +111,16 @@ toktyp key2tok(char *fplex)
 /**********************************************************************/
 char *tok2lex(toktyp ftok)
 {
-	printf("\n *** TO BE DONE");
-	return 0;
+	int tokentab_size = 21;
+	int keywordtab_size = 10;
+	for (int i = 0; i < tokentab_size; i++)
+	{
+		if (i < tokentab_size && ftok == tokentab[i].token)
+			return tokentab[i].text;
+		else if (i < keywordtab_size && ftok == keywordtab[i].token)
+			return keywordtab[i].text;
+	}
+	return tokentab[20].text;
 }
 
 /**********************************************************************/
