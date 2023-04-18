@@ -13,7 +13,7 @@
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
 /**********************************************************************/
-#include "keytoktab.h"
+#include "keytoktab.c"
 
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
@@ -21,7 +21,7 @@
 #define BUFSIZE 1024
 #define LEXSIZE 30
 static char buffer[BUFSIZE];
-static char lexbuf[LEXSIZE];
+static char lexbuf[LEXSIZE] = "TERROR";
 static int pbuf = 0; /* current index program buffer  */
 static int plex = 0; /* current index lexeme  buffer  */
 static int end_of_file = 0;
@@ -84,11 +84,15 @@ int is_special(char c)
    return 0;
 }
 
-int identified_indentifier(char *candidate)
+int is_number(char *cand)
 {
-   if ('a' <= candidate[0] <= 'z' || 'A' <= candidate[0] <= 'Z' || candidate[0] == '_')
-   {
-   }
+   
+}
+
+int identified_indentifier(char *cand)
+{
+   if (strlen(cand) && !is_special(cand[0]))
+      return 1;
    return 0;
 }
 /**********************************************************************/
@@ -97,10 +101,23 @@ int identified_indentifier(char *candidate)
 /**********************************************************************/
 /* Return a token                                                     */
 /**********************************************************************/
+char * get_lexeme();
 int get_token()
 {
-   printf("\n *** TO BE DONE");
-   return 0;
+   get_lexeme();
+   if (!end_of_file && strlen(lexbuf))
+   {
+      int ret;
+      if ((ret=lex2tok(lexbuf))!=nfound)
+         return ret;
+      else if ((ret=key2tok(lexbuf))!=nfound)
+         return ret;
+      else if (identified_indentifier(lexbuf))
+         return id;
+      else
+         return nfound;
+   } else
+      return '$';
 }
 
 /**********************************************************************/
@@ -121,14 +138,13 @@ char *get_lexeme()
       if (!strcmp(buffer, ":="))
       {
          strcpy(lexbuf, buffer);
-         return &lexbuf[0];
+         return lexbuf;
       }
       else
       {
          ungetc(buffer[pbuf - 1], stdin);
          buffer[pbuf - 1] = '\0';
          strcpy(lexbuf, buffer);
-         return &lexbuf[0];
       }
    }
    else if (!is_special(buffer[0]))
@@ -141,16 +157,18 @@ char *get_lexeme()
       buffer[pbuf - 1] = '\0';
       strcpy(lexbuf, buffer);
    }
-   return &lexbuf[0];
+   if (isspace(lexbuf[0])) lexbuf[0] = '\0';
+   return lexbuf;
 }
 
-int main(void)
+int main() 
 {
    while (!end_of_file)
    {
-      if (!isspace((get_lexeme())[0]))
-         printf("%s\n", lexbuf);
+      int t = get_token();
+      printf("%s\t|\t%s\n", lexbuf, tok2lex(t));
    }
+   
 }
 
 /**********************************************************************/

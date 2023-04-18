@@ -88,7 +88,7 @@ toktyp lex2tok(char *fplex)
 		if (!strcmp(fplex, tokentab[i].text))
 			return tokentab[i].token;
 	}
-	return tokentab[i-1].token;
+	return tokentab[tokentab_size-1].token;
 }
 
 /**********************************************************************/
@@ -103,7 +103,7 @@ toktyp key2tok(char *fplex)
 		if (!strcmp(fplex, keywordtab[i].text))
 			return keywordtab[i].token;
 	}
-	return keywordtab[i-1].token;
+	return keywordtab[keywordtab_size-1].token;
 }
 
 /**********************************************************************/

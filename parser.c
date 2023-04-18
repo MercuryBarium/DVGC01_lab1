@@ -13,7 +13,7 @@
 /* Other OBJECT's METHODS (IMPORTED)                                  */
 /**********************************************************************/
 #include "keytoktab.h"
-/* #include "lexer.h"       */ /* when the lexer     is added   */
+#include "lexer.h"          /* when the lexer     is added   */
 /* #include "symtab.h"      */ /* when the symtab    is added   */
 /* #include "optab.h"       */ /* when the optab     is added   */
 
@@ -37,7 +37,7 @@ static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
 /**********************************************************************/
 /*  Simulate the lexer -- get the next token from the buffer          */
 /**********************************************************************/
-static int pget_token()
+/*static int pget_token()
 {
     static int i = 0;
     if (tokens[i] != '$')
@@ -59,7 +59,7 @@ static void match(int t)
         printf("\n --------In match expected: %s, found: %s",
                tok2lex(t), tok2lex(lookahead));
     if (lookahead == t)
-        lookahead = pget_token();
+        lookahead = get_token();
     else
     {
         is_parse_ok = 0;
@@ -77,6 +77,7 @@ static void program_header()
     if (DEBUG)
         printf("\n *** In  program_header");
     match(program);
+    printf("\n%d\n", lookahead==id);
     match(id);
     match('(');
     match(input);
@@ -223,7 +224,7 @@ int parser()
 {
     if (DEBUG)
         printf("\n *** In  parser");
-    lookahead = pget_token(); // get the first token
+    lookahead = get_token(); // get the first token
     prog();                   // call the first grammar rule
     return is_parse_ok;       // status indicator
 }
