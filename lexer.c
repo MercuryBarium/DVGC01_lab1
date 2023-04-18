@@ -24,6 +24,7 @@ static char buffer[BUFSIZE];
 static char lexbuf[LEXSIZE];
 static int pbuf = 0; /* current index program buffer  */
 static int plex = 0; /* current index lexeme  buffer  */
+static int end_of_file = 0;
 
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
@@ -55,31 +56,41 @@ static void pbuffer()
 
 static void get_char()
 {
-   char c = getchar();
-   buffer[pbuf++] = c;
+
+   char c;
+   if ((c = getchar()) != EOF)
+   {
+      buffer[pbuf] = c;
+      buffer[++pbuf] = '\0';
+   }
+   else
+   {
+      end_of_file = 1;
+   }
 }
 
 /**********************************************************************/
 /* End of buffer handling functions                                   */
 /**********************************************************************/
-int is_separator(char c)
-{
-   if (c == ' ' || c == '\n' || c == '\t')
-      return 1;
-   else
-      return 0;
-}
 
 int is_special(char c)
 {
-   char special[] = {'$','(',')','*','+',',','-','.','/',':',';','='};
-   int special_size = 12;
+   const static char special[] = {'~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '+', '`', '-', '=', '{', '}',
+                                  '[', ']', ':', '"', ';', '\'', '<', '>', '?', ',', '.', '/', '|', '\\', '.'};
+   int special_size = 32;
    for (int i = 0; i < special_size; i++)
       if (c == special[i])
          return 1;
    return 0;
 }
 
+int identified_indentifier(char *candidate)
+{
+   if ('a' <= candidate[0] <= 'z' || 'A' <= candidate[0] <= 'Z' || candidate[0] == '_')
+   {
+   }
+   return 0;
+}
 /**********************************************************************/
 /*  PUBLIC METHODS for this OBJECT  (EXPORTED)                        */
 /**********************************************************************/
@@ -96,42 +107,49 @@ int get_token()
 /* Return a lexeme                                                    */
 /**********************************************************************/
 
-
 char *get_lexeme()
 {
-   
    do
-   {  // Waits for all separators to be eaten by the buffer. 
+   {
       pbuf = 0;
       get_char();
-   }
-   while (is_separator(buffer[0]));
+   } while (isspace(buffer[0]) && !end_of_file); // Eat the separators :D
 
-   // If special, read until not special
    if (is_special(buffer[0]))
    {
-      do
+      get_char();
+      if (!strcmp(buffer, ":="))
       {
-         get_char();
-      } while (is_special(buffer[pbuf-1]));
-      ungetc(buffer[pbuf-1], stdin);   // Back into the input stream
-      buffer[pbuf-1] = '\0';
-      pbuf = 0;
-      memcpy(lexbuf, buffer, strlen(buffer)+1);
-      return lexbuf;
+         strcpy(lexbuf, buffer);
+         return &lexbuf[0];
+      }
+      else
+      {
+         ungetc(buffer[pbuf - 1], stdin);
+         buffer[pbuf - 1] = '\0';
+         strcpy(lexbuf, buffer);
+         return &lexbuf[0];
+      }
    }
-   // else if not special, read until special or until separator
-   else
+   else if (!is_special(buffer[0]))
    {
       do
       {
          get_char();
-      } while (!is_special(buffer[pbuf-1]) && !is_separator(buffer[pbuf-1]));
-      ungetc(buffer[pbuf-1], stdin);
-      buffer[pbuf-1] = '\0';
-      pbuf = 0;      
-      memcpy(lexbuf, buffer, strlen(buffer)+1);
-      return lexbuf;
+      } while (!is_special(buffer[pbuf - 1]) && !isspace(buffer[pbuf - 1]) && !end_of_file);
+      ungetc(buffer[pbuf - 1], stdin);
+      buffer[pbuf - 1] = '\0';
+      strcpy(lexbuf, buffer);
+   }
+   return &lexbuf[0];
+}
+
+int main(void)
+{
+   while (!end_of_file)
+   {
+      if (!isspace((get_lexeme())[0]))
+         printf("%s\n", lexbuf);
    }
 }
 
