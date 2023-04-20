@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
@@ -55,6 +56,7 @@ static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
 /**********************************************************************/
 static void match(int t)
 {
+    
     if (DEBUG)
         printf("\n --------In match expected: %s, found: %s",
                tok2lex(t), tok2lex(lookahead));
@@ -65,6 +67,7 @@ static void match(int t)
         is_parse_ok = 0;
         printf("\n \e[1;31m*** Unexpected Token: expected: %s found: %s (in match)\e[0m",
                tok2lex(t), tok2lex(lookahead));
+        //exit(0);
     }
 }
 
@@ -77,7 +80,6 @@ static void program_header()
     if (DEBUG)
         printf("\n *** In  program_header");
     match(program);
-    printf("\n%d\n", lookahead==id);
     match(id);
     match('(');
     match(input);
@@ -190,7 +192,7 @@ void stat()
 void stat_list()
 {
     stat();
-    if (lookahead = ';')
+    if (lookahead == ';')
     {
         match(';');
         if (lookahead != end)
@@ -203,6 +205,7 @@ void stat_part()
     match(begin);
     stat_list();
     match(end);
+    match('.');
 }
 
 //______________________
@@ -213,7 +216,6 @@ void prog()
     program_header();
     var_part();
     stat_part();
-    match('$');
 }
 
 /**********************************************************************/

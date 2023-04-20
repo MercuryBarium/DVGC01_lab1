@@ -82,13 +82,12 @@ void p_toktab()
 toktyp lex2tok(char *fplex)
 {
 	int tokentab_size = 21;
-	int i;
-	for (i = 0; i < tokentab_size; i++)
+	for (int i = 0; i < tokentab_size; i++)
 	{
 		if (!strcmp(fplex, tokentab[i].text))
 			return tokentab[i].token;
 	}
-	return tokentab[tokentab_size-1].token;
+	return nfound;
 }
 
 /**********************************************************************/
@@ -97,13 +96,12 @@ toktyp lex2tok(char *fplex)
 toktyp key2tok(char *fplex)
 {
 	int keywordtab_size = 10;
-	int i;
-	for (i = 0; i < keywordtab_size; i++)
+	for (int i = 0; i < keywordtab_size; i++)
 	{
 		if (!strcmp(fplex, keywordtab[i].text))
 			return keywordtab[i].token;
 	}
-	return keywordtab[keywordtab_size-1].token;
+	return nfound;
 }
 
 /**********************************************************************/

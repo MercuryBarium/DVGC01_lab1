@@ -9,11 +9,12 @@
 #include <ctype.h>
 #include <string.h>
 #include <ncurses.h>
+#include <regex.h>
 
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
 /**********************************************************************/
-#include "keytoktab.c"
+#include "keytoktab.h"
 
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
@@ -86,12 +87,17 @@ int is_special(char c)
 
 int is_number(char *cand)
 {
-   
+   for (int i = 0; i < strlen(cand); i++)
+   {
+      if (!('0' <= cand[i] && cand[i] <= '9'))
+         return 0;
+   }
+   return 1;
 }
 
 int identified_indentifier(char *cand)
 {
-   if (strlen(cand) && !is_special(cand[0]))
+   if (strlen(cand) && !is_special(cand[0]) && !('0' <= cand[0] && cand[0] <= '9'))
       return 1;
    return 0;
 }
@@ -105,19 +111,18 @@ char * get_lexeme();
 int get_token()
 {
    get_lexeme();
+   //printf("\n\e[1;35m%ld:\t%s\e[0m", strlen(lexbuf),lexbuf);
    if (!end_of_file && strlen(lexbuf))
    {
-      int ret;
-      if ((ret=lex2tok(lexbuf))!=nfound)
-         return ret;
-      else if ((ret=key2tok(lexbuf))!=nfound)
-         return ret;
-      else if (identified_indentifier(lexbuf))
-         return id;
-      else
-         return nfound;
-   } else
-      return '$';
+      int ret = is_number(lexbuf);
+      if (ret) return number;
+      ret = key2tok(lexbuf);
+      if (ret != nfound) return ret;
+      ret = lex2tok(lexbuf);
+      if (ret != nfound) return ret;
+      if (identified_indentifier(lexbuf)) return id;   
+   } 
+   return '$';
 }
 
 /**********************************************************************/
@@ -126,6 +131,7 @@ int get_token()
 
 char *get_lexeme()
 {
+   beginning:
    do
    {
       pbuf = 0;
@@ -157,11 +163,10 @@ char *get_lexeme()
       buffer[pbuf - 1] = '\0';
       strcpy(lexbuf, buffer);
    }
-   if (isspace(lexbuf[0])) lexbuf[0] = '\0';
    return lexbuf;
 }
 
-int main() 
+/*int main() 
 {
    while (!end_of_file)
    {
