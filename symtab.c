@@ -170,6 +170,8 @@ void setv_type(toktyp ftype)
       if (prog_i != -1)
          size[prog_i] += type_size;
    }
+   for (int i = prog_i+2; i < numrows; i++)
+      addr[i] = addr[i-1] + size[i-1];
 }
 
 /**********************************************************************/

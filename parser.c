@@ -230,7 +230,8 @@ void stat_part()
 void prog()
 {
     program_header();
-    var_part();
+    while (lookahead == var)
+        var_part();
     stat_part();
     match('$');
 }
