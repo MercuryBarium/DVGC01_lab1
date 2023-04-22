@@ -15,7 +15,6 @@
 /* Other OBJECT's METHODS (IMPORTED)                                  */
 /**********************************************************************/
 #include "keytoktab.h"
-
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
@@ -98,7 +97,9 @@ int is_number(char *cand)
 int identified_indentifier(char *cand)
 {
    if (strlen(cand) && !is_special(cand[0]) && !('0' <= cand[0] && cand[0] <= '9'))
+   {
       return 1;
+   }
    return 0;
 }
 /**********************************************************************/
@@ -107,11 +108,9 @@ int identified_indentifier(char *cand)
 /**********************************************************************/
 /* Return a token                                                     */
 /**********************************************************************/
-char * get_lexeme();
+
 int get_token()
 {
-   get_lexeme();
-   //printf("\n\e[1;35m%ld:\t%s\e[0m", strlen(lexbuf),lexbuf);
    if (!end_of_file && strlen(lexbuf))
    {
       int ret = is_number(lexbuf);
@@ -131,7 +130,6 @@ int get_token()
 
 char *get_lexeme()
 {
-   beginning:
    do
    {
       pbuf = 0;
@@ -166,15 +164,7 @@ char *get_lexeme()
    return lexbuf;
 }
 
-/*int main() 
-{
-   while (!end_of_file)
-   {
-      int t = get_token();
-      printf("%s\t|\t%s\n", lexbuf, tok2lex(t));
-   }
-   
-}
+
 
 /**********************************************************************/
 /* End of code                                                        */

@@ -97,18 +97,10 @@ static int get_ref(char *fpname)
 /**********************************************************************/
 static void p_symrow(int ftref)
 {
-   /*
-   static tname name[TABSIZE];
-   static toktyp role[TABSIZE];
-   static toktyp type[TABSIZE];
-   static int size[TABSIZE];
-   static int addr[TABSIZE];
-   */
-   printf("\n\e[1;%dm%s\t\t%d\t%d\t%d\t%d\e[0m", 
-      (31+ftref)%37, 
+   printf("\n%s\t\t%8s\t%8s\t%d\t%d",  
       name[ftref], 
-      role[ftref],
-      type[ftref],
+      tok2lex(role[ftref]),
+      tok2lex(type[ftref]),
       size[ftref],
       addr[ftref]
    );
@@ -116,7 +108,8 @@ static void p_symrow(int ftref)
 
 void p_symtab()
 {
-   printf("\n\e[1;33m**********************************************************************\e[0m\n\t\tSYM\tTAB");
+   printf("\n\e[1;33m**********************************************************************\e[0m\nname\t\trole\t\ttype\t\tsize\taddress");
+   printf("\n----------------------------------------------------------------------");
    for (int i = 0; i < numrows; i++)
       p_symrow(i);
    printf("\n\e[1;33m**********************************************************************\e[0m");
@@ -128,7 +121,7 @@ void p_symtab()
 void addp_name(char *fpname)
 {
    initst();
-   addrow(fpname, program, program, strlen(fpname), 0);
+   addrow(fpname, program, program, 0, 0);
 }
 
 /**********************************************************************/
@@ -156,9 +149,26 @@ int find_name(char *fpname)
 /**********************************************************************/
 void setv_type(toktyp ftype)
 {
-   for (int i = numrows-1; i>=0 && get_type(i) == undef; i--)
+   int type_size = 0;
+   int prog_i = 0;
+   for (int j = 0; j < numrows; j++)
    {
-      
+      if (!strcmp(name[j], tok2lex(ftype)))
+         type_size= size[j];
+      if (role[j] == program)
+      {
+         prog_i = j;
+         break;
+      }
+
+   }
+   int i;
+   for (i = numrows-1; i>=0 && get_type(i) == undef; i--)
+   {
+      set_type(i, ftype);
+      set_size(i, type_size);
+      if (prog_i != -1)
+         size[prog_i] += type_size;
    }
 }
 
@@ -167,8 +177,10 @@ void setv_type(toktyp ftype)
 /**********************************************************************/
 toktyp get_ntype(char *fpname)
 {
-   printf("\n *** TO BE DONE");
-   return 0;
+   for (int i = 0; i < numrows; i++)
+      if (!strcmp(name[i], fpname) && role[i] == var)
+         return type[i];
+   return nfound;
 }
 
 /**********************************************************************/

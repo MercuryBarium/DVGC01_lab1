@@ -15,7 +15,7 @@
 /**********************************************************************/
 #include "keytoktab.h"
 #include "lexer.h"          /* when the lexer     is added   */
-/* #include "symtab.h"      */ /* when the symtab    is added   */
+#include "symtab.h"         /* when the symtab    is added   */
 /* #include "optab.h"       */ /* when the optab     is added   */
 
 /**********************************************************************/
@@ -24,6 +24,7 @@
 #define DEBUG 1
 static int lookahead = 0;
 static int is_parse_ok = 1;
+char lexeme[50] = "\0";
 
 /**********************************************************************/
 /* RAPID PROTOTYPING - simulate the token stream & lexer (get_token)  */
@@ -61,7 +62,10 @@ static void match(int t)
         printf("\n --------In match expected: %s, found: %s",
                tok2lex(t), tok2lex(lookahead));
     if (lookahead == t)
+    {
+        strcpy(lexeme, get_lexeme());
         lookahead = get_token();
+    }
     else
     {
         is_parse_ok = 0;
@@ -80,6 +84,7 @@ static void program_header()
     if (DEBUG)
         printf("\n *** In  program_header");
     match(program);
+    addp_name(lexeme);
     match(id);
     match('(');
     match(input);
@@ -94,14 +99,25 @@ static void program_header()
 void type()
 {
     if (lookahead == integer)
+    {
+        setv_type(integer);
         match(integer);
+    }
     else if (lookahead == real)
+    {
+        setv_type(real);
         match(real);
+    }
     else if (lookahead == boolean)
+    {
+        setv_type(boolean);
         match(boolean);
+    }
 }
 void id_list()
 {
+    if (lookahead == id)
+        addv_name(lexeme);
     match(id);
     if (lookahead == ',')
     {
@@ -227,8 +243,11 @@ int parser()
 {
     if (DEBUG)
         printf("\n *** In  parser");
+    if (!strlen(lexeme))
+        strcpy(lexeme, get_lexeme());
     lookahead = get_token(); // get the first token
     prog();                   // call the first grammar rule
+    p_symtab();
     return is_parse_ok;       // status indicator
 }
 
