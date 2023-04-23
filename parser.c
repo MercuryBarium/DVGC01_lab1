@@ -16,7 +16,7 @@
 #include "keytoktab.h"
 #include "lexer.h"          /* when the lexer     is added   */
 #include "symtab.h"         /* when the symtab    is added   */
-/* #include "optab.h"       */ /* when the optab     is added   */
+#include "optab.h"          /* when the optab     is added   */
 
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
@@ -51,7 +51,18 @@ static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
 /**********************************************************************/
-
+static int op_tree[256];
+static int op_pos = 0;
+static void init_optree()
+{
+   for (int i = 0; i < 256; i++)
+      op_tree[i] = nfound;
+}
+static int count() {int i;for (i=0; i<256 && op_tree[i] != nfound; i++); return i;}
+static toktyp digest_expr(int optree[256])
+{
+    
+}
 /**********************************************************************/
 /* The Parser functions                                               */
 /**********************************************************************/
@@ -157,7 +168,14 @@ void operand()
     if (lookahead == number)
         match(number);
     else
+    {
+        if (!find_name(lexeme))
+        {
+            printf("\n\e[1;31mUndeclared variable name referenced: %s\e[0m", lexeme);
+            
+        }
         match(id);
+    }
 }
 
 void expr(); // Magic :>
@@ -195,6 +213,11 @@ void expr()
 
 void assign_stat()
 {
+    if (!find_name(lexeme))
+    {
+        printf("\n\e[1;31mUndeclared variable name referenced: %s\e[0m", lexeme);
+        is_parse_ok = 0;
+    }
     match(id);
     match(assign);
     expr();
