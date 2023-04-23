@@ -14,9 +14,9 @@
 /* Other OBJECT's METHODS (IMPORTED)                                  */
 /**********************************************************************/
 #include "keytoktab.h"
-#include "lexer.h"          /* when the lexer     is added   */
-#include "symtab.h"         /* when the symtab    is added   */
-#include "optab.h"          /* when the optab     is added   */
+#include "lexer.h"  /* when the lexer     is added   */
+#include "symtab.h" /* when the symtab    is added   */
+#include "optab.h"  /* when the optab     is added   */
 
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
@@ -51,24 +51,97 @@ static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
 /**********************************************************************/
+static toktyp id_type = undef;
 static int op_tree[256];
 static int op_pos = 0;
+static void op_print_tree()
+{
+    printf("\n\e[1;33m");
+    for (int i = 0; i < op_pos; i++)
+        printf(" %s ", tok2lex(op_tree[i]));
+    printf("\e[0m");
+}
 static void init_optree()
 {
-   for (int i = 0; i < 256; i++)
-      op_tree[i] = nfound;
+    op_pos = 0;
+    for (int i = 0; i < 256; i++)
+        op_tree[i] = nfound;
 }
-static int count() {int i;for (i=0; i<256 && op_tree[i] != nfound; i++); return i;}
-static toktyp digest_expr(int optree[256])
+
+static void op_remove(int x)
 {
-    
+    for (int i = x; i < op_pos; i++)
+    {
+        if (i == x)
+            op_tree[i] = nfound;
+        else
+            op_tree[i - 1] = op_tree[i];
+    }
+    op_pos--;
 }
+static void add_to_op(toktyp v) { op_tree[op_pos++] = v; }
+static void relax(int i, toktyp o, int op_end)
+{
+    for (int j = i; j + 2 < op_end; j++)
+    {
+        if ((op_tree[j] == integer || op_tree[j] == real) && op_tree[j + 1] == o && (op_tree[j + 2] == integer || op_tree[j + 2] == real))
+        {
+            op_tree[j] = get_otype(op_tree[j + 1], op_tree[j], op_tree[j + 2]);
+            op_remove(j + 2);
+            op_remove(j + 1);
+            j--;
+        }
+    }
+}
+
+static void relax_parentheses()
+{
+    for (int i = op_pos - 1; i >= 0; i--)
+    {
+        if (op_tree[i] == '(')
+        {
+            int x = i + 1;
+            while (x < op_pos)
+            {
+                if (op_tree[x] == ')')
+                {
+                    op_remove(x);
+                    relax(i, '+', x);
+                    op_remove(i);
+                    break;
+                }
+                else
+                    x++;
+            }
+            op_print_tree();
+        }
+    }
+}
+
+static toktyp digest_expr()
+{
+    for (int i = 0; i < op_pos; i++)
+        if (op_tree[i] == boolean)
+            return undef;
+    relax(0, '*', op_pos);
+    op_print_tree();
+
+    relax_parentheses();
+
+    relax(0, '*', op_pos);
+    op_print_tree();
+
+    relax(0, '+', op_pos);
+    op_print_tree();
+    return op_tree[0];
+}
+
 /**********************************************************************/
 /* The Parser functions                                               */
 /**********************************************************************/
 static void match(int t)
 {
-    
+
     if (DEBUG)
         printf("\n --------In match expected: %s, found: %s",
                tok2lex(t), tok2lex(lookahead));
@@ -82,7 +155,7 @@ static void match(int t)
         is_parse_ok = 0;
         printf("\n \e[1;31m*** Unexpected Token: expected: %s found: %s (in match)\e[0m",
                tok2lex(t), tok2lex(lookahead));
-        //exit(0);
+        // exit(0);
     }
 }
 
@@ -166,14 +239,17 @@ void var_part()
 void operand()
 {
     if (lookahead == number)
+    {
+        add_to_op(integer);
         match(number);
+    }
     else
     {
         if (!find_name(lexeme))
         {
             printf("\n\e[1;31mUndeclared variable name referenced: %s\e[0m", lexeme);
-            
         }
+        add_to_op(get_ntype(lexeme));
         match(id);
     }
 }
@@ -183,8 +259,10 @@ void factor()
 {
     if (lookahead == '(')
     {
+        add_to_op(lookahead);
         match('(');
         expr();
+        add_to_op(lookahead);
         match(')');
     }
     else
@@ -196,6 +274,7 @@ void term()
     factor();
     if (lookahead == '*')
     {
+        add_to_op('*');
         match('*');
         term(); //  -> factor();
     }
@@ -206,6 +285,7 @@ void expr()
     term();
     if (lookahead == '+')
     {
+        add_to_op('+');
         match('+');
         expr();
     }
@@ -218,6 +298,7 @@ void assign_stat()
         printf("\n\e[1;31mUndeclared variable name referenced: %s\e[0m", lexeme);
         is_parse_ok = 0;
     }
+    id_type = get_ntype(lexeme);
     match(id);
     match(assign);
     expr();
@@ -225,7 +306,17 @@ void assign_stat()
 
 void stat()
 {
+    init_optree(); // operation_buffer
     assign_stat();
+    op_print_tree();
+    toktyp t;
+    if ((t=digest_expr(op_tree)) != id_type)
+    {
+        is_parse_ok = 0;
+        printf("\n\e[1;31mExpression invalidated: %s != %s\e[0m", tok2lex(id_type), tok2lex(t));
+    } else {
+        printf("\n\e[1;32mExpression validated\e[0m");
+    }
 }
 
 void stat_list()
@@ -241,6 +332,7 @@ void stat_list()
 
 void stat_part()
 {
+
     match(begin);
     stat_list();
     match(end);
@@ -270,9 +362,9 @@ int parser()
     if (!strlen(lexeme))
         strcpy(lexeme, get_lexeme());
     lookahead = get_token(); // get the first token
-    prog();                   // call the first grammar rule
+    prog();                  // call the first grammar rule
     p_symtab();
-    return is_parse_ok;       // status indicator
+    return is_parse_ok; // status indicator
 }
 
 /**********************************************************************/
