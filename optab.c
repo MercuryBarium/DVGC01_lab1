@@ -17,19 +17,20 @@
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
+#define DEBUG 1
+
 #define NENTS 4
 
 static int optab[][NENTS] = {
-   {'+', integer, integer, integer},
-   {'+', real,    real,    real},
-   {'+', integer, real,    real},
-   {'+', real,    integer, real},
-   {'*', integer, integer, integer},
-   {'*', real,    real,    real},
-   {'*', integer, real,    real},
-   {'*', real,    integer, real},
-   {'$', undef,   undef,   undef}
-   };
+    {'+', integer, integer, integer},
+    {'+', real, real, real},
+    {'+', integer, real, real},
+    {'+', real, integer, real},
+    {'*', integer, integer, integer},
+    {'*', real, real, real},
+    {'*', integer, real, real},
+    {'*', real, integer, real},
+    {'$', undef, undef, undef}};
 
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
@@ -38,10 +39,13 @@ static int op_tree[256];
 static int op_pos = 0;
 void op_print_tree()
 {
-    printf("\n\e[1;33m");
-    for (int i = 0; i < op_pos; i++)
-        printf(" %s ", tok2lex(op_tree[i]));
-    printf("\e[0m");
+    if (DEBUG)
+    {
+        printf("\n\e[1;33m");
+        for (int i = 0; i < op_pos; i++)
+            printf(" %s ", tok2lex(op_tree[i]));
+        printf("\e[0m");
+    }
 }
 void init_optree()
 {
@@ -128,26 +132,25 @@ toktyp digest_expr()
 /**********************************************************************/
 void p_optab()
 {
-   printf("\n________________________________________________________\nTHE OPERATOR TABLE\n________________________________________________________\noperator\targ1\targ2\tresult\n________________________________________________________");
-   for (int i = 0; optab[i][0] != '$'; i++)
-      printf("\n%8s%12s%10s%10s",
-         tok2lex(optab[i][0]),
-         tok2lex(optab[i][1]),
-         tok2lex(optab[i][2]),
-         tok2lex(optab[i][3])
-      );
-   printf("\n________________________________________________________");
+    printf("\n________________________________________________________\nTHE OPERATOR TABLE\n________________________________________________________\noperator\targ1\targ2\tresult\n________________________________________________________");
+    for (int i = 0; optab[i][0] != '$'; i++)
+        printf("\n%8s%12s%10s%10s",
+               tok2lex(optab[i][0]),
+               tok2lex(optab[i][1]),
+               tok2lex(optab[i][2]),
+               tok2lex(optab[i][3]));
+    printf("\n________________________________________________________");
 }
 
 /**********************************************************************/
 /* return the type of a binary expression op arg1 arg2                */
 /**********************************************************************/
 int get_otype(int op, int arg1, int arg2)
-{  
-   for (int i = 0; optab[i][0] != '$'; i++)
-      if (op == optab[i][0] && arg1 == optab[i][1] && arg2 == optab[i][2])
-         return optab[i][3];
-   return undef;
+{
+    for (int i = 0; optab[i][0] != '$'; i++)
+        if (op == optab[i][0] && arg1 == optab[i][1] && arg2 == optab[i][2])
+            return optab[i][3];
+    return undef;
 }
 
 /**********************************************************************/

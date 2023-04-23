@@ -21,7 +21,7 @@
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
-#define DEBUG 1
+#define DEBUG 0
 static int lookahead = 0;
 static int is_parse_ok = 1;
 char lexeme[50] = "\0";
