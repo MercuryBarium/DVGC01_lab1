@@ -11,6 +11,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ncurses.h>
 
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
@@ -23,7 +24,7 @@
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
-#define DEBUG 1
+#define DEBUG 0
 static int lookahead = 0;
 static int is_parse_ok = 1;
 char lexeme[50] = "\0";
@@ -53,6 +54,19 @@ static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
 /**********************************************************************/
+void printSTDIN()
+{
+    printf("________________________________________________________\n THE PROGRAM TEXT\n________________________________________________________\n");
+    char text[1024];
+    int b = 0;
+    while ((text[b++]=getc(stdin)) != EOF);
+    text[--b] = '\0';
+    printf("%s",text);
+    for (int i = strlen(text)-1; i >= 0; i--)
+        ungetc(text[i], stdin);
+    printf("\n________________________________________________________");
+}
+
 static toktyp id_type = undef;
 static int op_tree[256];
 static int op_pos = 0;
@@ -60,10 +74,9 @@ static void op_print_tree()
 {
     if (DEBUG)
     {
-        printf("\n\e[1;33m");
+        printf("\n");
         for (int i = 0; i < op_pos; i++)
             printf(" %s ", tok2lex(op_tree[i]));
-        printf("\e[0m");
     }
 }
 static void init_optree()
@@ -140,7 +153,7 @@ static toktyp digest_expr()
 
     relax(0, '+', op_pos);
     op_print_tree();
-    if (op_pos == 1)
+    if (op_pos == 1 && (op_tree[0] == integer || op_tree[0] == real || op_tree[0] == boolean))
         return op_tree[0];
     else
         return undef;
@@ -163,7 +176,7 @@ static void match(int t)
     else
     {
         is_parse_ok = 0;
-        printf("\n \e[1;31m*** Unexpected Token: expected: %s found: %s (in match)\e[0m",
+        printf("\nSYNTAX:   Symbol expected: %s found: %s",
                tok2lex(t), tok2lex(lookahead));
         // exit(0);
     }
@@ -216,7 +229,7 @@ void id_list()
             addv_name(lexeme);
         else
         {    
-            printf("\n\e[1;31mSEMANTICS: ID already declared. %s \e[0m", lexeme);
+            printf("\nSEMANTIC: ID already declared: %s", lexeme);
             is_parse_ok = 0;
         }
     }
@@ -265,7 +278,7 @@ void operand()
     {
         if (!find_name(lexeme))
         {
-            printf("\n\e[1;31mSEMANTICS: Undeclared variable name referenced: %s\e[0m", lexeme);
+            printf("\nSEMANTIC: ID NOT declared: %s", lexeme);
             is_parse_ok = 0;
         }
         add_to_op(get_ntype(lexeme));
@@ -314,7 +327,7 @@ void assign_stat()
 {
     if (!find_name(lexeme))
     {
-        printf("\n\e[1;31mSEMANTICS: Undeclared variable name referenced: %s\e[0m", lexeme);
+        printf("\nSEMANTIC: ID NOT declared: %s", lexeme);
         is_parse_ok = 0;
     }
     id_type = get_ntype(lexeme);
@@ -332,9 +345,7 @@ void stat()
     if ((t=digest_expr()) != id_type)
     {
         is_parse_ok = 0;
-        printf("\n\e[1;31mSEMANTICS: Expression invalidated: %s != %s\e[0m", tok2lex(id_type), tok2lex(t));
-    } else {
-        printf("\n\e[1;32mSEMANTICS: Expression validated\e[0m");
+        printf("\nSEMANTIC: Assign types: %s != %s", tok2lex(id_type), tok2lex(t));
     }
 }
 
@@ -376,6 +387,7 @@ void prog()
 
 int parser()
 {
+    printSTDIN();
     if (DEBUG)
         printf("\n *** In  parser");
     if (!strlen(lexeme))

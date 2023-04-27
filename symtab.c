@@ -99,7 +99,7 @@ static int get_ref(char *fpname)
 /**********************************************************************/
 static void p_symrow(int ftref)
 {
-   printf("\n%s\t\t%8s\t%8s\t%d\t%d",  
+   printf("\n%11s%11s%11s%10d%10d",  
       name[ftref], 
       tok2lex(role[ftref]),
       tok2lex(type[ftref]),
@@ -110,13 +110,14 @@ static void p_symrow(int ftref)
 
 void p_symtab()
 {
-   printf("\n\e[1;32m**********************************************************************\e[0m\nname\t\trole\t\ttype\t\tsize\taddress");
-   printf("\n----------------------------------------------------------------------");
-   for (int i = 0; i < numrows; i++)
+   printf("\n________________________________________________________");
+   printf("\n       NAME       ROLE       TYPE      SIZE      ADDR");
+   printf("\n________________________________________________________");
+   for (int i = 6; i < numrows; i++)
       p_symrow(i);
-   printf("\n\e[1;32m**********************************************************************\e[0m");
-   printf("\n\tSTATIC STORAGE REQUIRED: %d Bytes", size[6]);
-   printf("\n\e[1;32m**********************************************************************\e[0m");
+   printf("\n________________________________________________________");
+   printf("\n STATIC STORAGE REQUIRED: %d Bytes", size[6]);
+   printf("\n________________________________________________________");
 }
 
 /**********************************************************************/
