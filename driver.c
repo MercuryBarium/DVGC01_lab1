@@ -17,8 +17,8 @@
 /**********************************************************************/
 int main()
 {
-   parser() ? printf(" \n \e[0;32mParse Successful! \n")
-            : printf(" \n \e[0;31mParse Failed! \n");
+   parser() ? printf(" \n \e[0;32mParse Successful! \e[0m\n")
+            : printf(" \n \e[0;31mParse Failed! \e[0m\n");
             
    return 1;
 }

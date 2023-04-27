@@ -140,8 +140,11 @@ static toktyp digest_expr()
 
     relax(0, '+', op_pos);
     op_print_tree();
-    return op_tree[0];
-}
+    if (op_pos == 1)
+        return op_tree[0];
+    else
+        return undef;
+}   
 
 /**********************************************************************/
 /* The Parser functions                                               */
@@ -208,7 +211,15 @@ void type()
 void id_list()
 {
     if (lookahead == id)
-        addv_name(lexeme);
+    {
+        if (!find_name(lexeme))
+            addv_name(lexeme);
+        else
+        {    
+            printf("\n\e[1;31mSEMANTICS: ID already declared. %s \e[0m", lexeme);
+            is_parse_ok = 0;
+        }
+    }
     match(id);
     if (lookahead == ',')
     {
@@ -254,7 +265,8 @@ void operand()
     {
         if (!find_name(lexeme))
         {
-            printf("\n\e[1;31mUndeclared variable name referenced: %s\e[0m", lexeme);
+            printf("\n\e[1;31mSEMANTICS: Undeclared variable name referenced: %s\e[0m", lexeme);
+            is_parse_ok = 0;
         }
         add_to_op(get_ntype(lexeme));
         match(id);
@@ -302,7 +314,7 @@ void assign_stat()
 {
     if (!find_name(lexeme))
     {
-        printf("\n\e[1;31mUndeclared variable name referenced: %s\e[0m", lexeme);
+        printf("\n\e[1;31mSEMANTICS: Undeclared variable name referenced: %s\e[0m", lexeme);
         is_parse_ok = 0;
     }
     id_type = get_ntype(lexeme);
@@ -320,9 +332,9 @@ void stat()
     if ((t=digest_expr()) != id_type)
     {
         is_parse_ok = 0;
-        printf("\n\e[1;31mExpression invalidated: %s != %s\e[0m", tok2lex(id_type), tok2lex(t));
+        printf("\n\e[1;31mSEMANTICS: Expression invalidated: %s != %s\e[0m", tok2lex(id_type), tok2lex(t));
     } else {
-        printf("\n\e[1;32mExpression validated\e[0m");
+        printf("\n\e[1;32mSEMANTICS: Expression validated\e[0m");
     }
 }
 
