@@ -32,7 +32,16 @@ static int optab[][NENTS] = {
     {'*', real, real, real},
     {'*', integer, real, real},
     {'*', real, integer, real},
-    {'$', undef, undef, undef}};
+    {'/', integer, integer, integer},
+    {'/', integer, real, real},
+    {'/', real, integer, real},
+    {'/', real, real, real},
+    {'-', integer, integer, integer},
+    {'-', integer, real, real},
+    {'-', real, integer, real},
+    {'-', real, real, real},
+    {'$', undef, undef, undef},
+};
 
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */

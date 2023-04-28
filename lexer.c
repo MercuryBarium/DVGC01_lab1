@@ -113,7 +113,7 @@ int identified_indentifier(char *cand)
 
 int get_token()
 {
-   if (!end_of_file && strlen(lexbuf))
+   if (strlen(lexbuf) && !isspace(lexbuf[0]))
    {
       int ret = is_number(lexbuf);
       if (ret) return number;
@@ -121,7 +121,8 @@ int get_token()
       if (ret != nfound) return ret;
       ret = lex2tok(lexbuf);
       if (ret != nfound) return ret;
-      if (identified_indentifier(lexbuf)) return id;   
+      if (identified_indentifier(lexbuf)) return id;
+      return nfound;
    } 
    return '$';
 }

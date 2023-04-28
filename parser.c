@@ -54,17 +54,32 @@ static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
 /**********************************************************************/
-void printSTDIN()
+static void printSTDIN()
 {
     printf("________________________________________________________\n THE PROGRAM TEXT\n________________________________________________________\n");
     char text[1024];
     int b = 0;
-    while ((text[b++]=getc(stdin)) != EOF);
+    while ((text[b++] = getc(stdin)) != EOF)
+        ;
     text[--b] = '\0';
-    printf("%s",text);
-    for (int i = strlen(text)-1; i >= 0; i--)
+    printf("%s", text);
+    for (int i = strlen(text) - 1; i >= 0; i--)
         ungetc(text[i], stdin);
-    printf("\n________________________________________________________");
+    printf("$\n________________________________________________________");
+}
+
+static void reach_end()
+{
+    if (get_token() != '$')
+    {
+        is_parse_ok = 0;
+        printf("\nSYNTAX:   Extra symbols after end of parse!\n          ");
+        do
+        {
+            printf("%s ", lexeme);
+            strcpy(lexeme, get_lexeme());
+        } while (get_token() != '$');
+    }
 }
 
 static toktyp id_type = undef;
@@ -98,7 +113,6 @@ static void op_remove(int x)
     op_pos--;
 }
 static void add_to_op(toktyp v) { op_tree[op_pos++] = v; }
-
 
 static void relax(int i, toktyp o, int op_end)
 {
@@ -143,21 +157,25 @@ static toktyp digest_expr()
     for (int i = 0; i < op_pos; i++)
         if (op_tree[i] == boolean)
             return undef;
+
     relax(0, '*', op_pos);
+    relax(0, '/', op_pos);
     op_print_tree();
 
     relax_parentheses();
 
     relax(0, '*', op_pos);
+    relax(0, '/', op_pos);
     op_print_tree();
 
     relax(0, '+', op_pos);
+    relax(0, '-', op_pos);
     op_print_tree();
     if (op_pos == 1 && (op_tree[0] == integer || op_tree[0] == real || op_tree[0] == boolean))
         return op_tree[0];
     else
         return undef;
-}   
+}
 
 /**********************************************************************/
 /* The Parser functions                                               */
@@ -166,8 +184,10 @@ static void match(int t)
 {
 
     if (DEBUG)
+    {
         printf("\n --------In match expected: %s, found: %s",
                tok2lex(t), tok2lex(lookahead));
+    }
     if (lookahead == t)
     {
         strcpy(lexeme, get_lexeme());
@@ -176,8 +196,10 @@ static void match(int t)
     else
     {
         is_parse_ok = 0;
+        // printf("\nLexeme: %s : %ld, tok: %s", lexeme, strlen(lexeme), tok2lex(lookahead));
         printf("\nSYNTAX:   Symbol expected: %s found: %s",
                tok2lex(t), tok2lex(lookahead));
+
         // exit(0);
     }
 }
@@ -191,7 +213,10 @@ static void program_header()
     if (DEBUG)
         printf("\n *** In  program_header");
     match(program);
-    addp_name(lexeme);
+    if (lookahead == id)
+        addp_name(lexeme);
+    else 
+        addp_name("???");
     match(id);
     match('(');
     match(input);
@@ -220,6 +245,11 @@ void type()
         setv_type(boolean);
         match(boolean);
     }
+    else
+    {
+        printf("\nSYNTAX:   Type name expected found %s", lexeme);
+        setv_type(error);
+    }
 }
 void id_list()
 {
@@ -228,7 +258,7 @@ void id_list()
         if (!find_name(lexeme))
             addv_name(lexeme);
         else
-        {    
+        {
             printf("\nSEMANTIC: ID already declared: %s", lexeme);
             is_parse_ok = 0;
         }
@@ -304,10 +334,10 @@ void factor()
 void term()
 {
     factor();
-    if (lookahead == '*')
+    if (lookahead == '*' || lookahead == '/')
     {
-        add_to_op('*');
-        match('*');
+        add_to_op(lookahead);
+        match(lookahead);
         term(); //  -> factor();
     }
 }
@@ -315,10 +345,10 @@ void term()
 void expr()
 {
     term();
-    if (lookahead == '+')
+    if (lookahead == '+' || lookahead == '-')
     {
-        add_to_op('+');
-        match('+');
+        add_to_op(lookahead);
+        match(lookahead);
         expr();
     }
 }
@@ -342,7 +372,7 @@ void stat()
     assign_stat();
     op_print_tree();
     toktyp t;
-    if ((t=digest_expr()) != id_type)
+    if ((t = digest_expr()) != id_type || id_type == undef || id_type == nfound)
     {
         is_parse_ok = 0;
         printf("\nSEMANTIC: Assign types: %s != %s", tok2lex(id_type), tok2lex(t));
@@ -374,11 +404,17 @@ void stat_part()
 //___PROG___
 void prog()
 {
-    program_header();
-    while (lookahead == var)
+    if (lookahead == '$')
+    {
+        is_parse_ok = 0;
+        printf("\nSYNTAX:   Input file is empty");
+    }
+    else
+    {
+        program_header();
         var_part();
-    stat_part();
-    match('$');
+        stat_part();
+    }
 }
 
 /**********************************************************************/
@@ -394,6 +430,9 @@ int parser()
         strcpy(lexeme, get_lexeme());
     lookahead = get_token(); // get the first token
     prog();                  // call the first grammar rule
+
+    reach_end();
+    printf("\n________________________________________________________");
     p_symtab();
     return is_parse_ok; // status indicator
 }

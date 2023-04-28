@@ -110,6 +110,7 @@ static void p_symrow(int ftref)
 
 void p_symtab()
 {
+   printf("\n________________________________________________________\nTHE SYMBOL TABLE");
    printf("\n________________________________________________________");
    printf("\n       NAME       ROLE       TYPE      SIZE      ADDR");
    printf("\n________________________________________________________");
